@@ -1,6 +1,7 @@
 package net.ldauvilaire.sample.batch;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -30,115 +31,120 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import net.ldauvilaire.sample.batch.job.JobConstants;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
-@SpringBootApplication(exclude = { BatchAutoConfiguration.class })
+@SpringBootApplication(exclude = {BatchAutoConfiguration.class})
 public class Application {
+    private static final String FIRST_TEST_RESOURCE_PATH = "first/sample-data.csv";
+    private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
+    private static final DateFormat DF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
-	private static final DateFormat DF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    public static void main(String[] args) throws IOException {
 
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
+        Resource resource = new ClassPathResource(FIRST_TEST_RESOURCE_PATH);
+        String filePath = resource.getFile().getPath();
 
-	@Bean
-	public CommandLineRunner commandLineRunner(ApplicationContext context) {
-		return args -> {
+        args = new String[]{"-first", filePath};
+        SpringApplication.run(Application.class, args);
+    }
 
-			CommandLineParser parser = new DefaultParser();
-			Options options = new Options();
-			options.addOption(Option.builder("first")
-					.argName("file")
-					.hasArg()
-					.desc("use given file for first job")
-					.build());
+    @Bean
+    public CommandLineRunner commandLineRunner(ApplicationContext context) {
+        return args -> {
 
-			CommandLine line = null;
-			try {
-				line = parser.parse(options, args);
-			} catch (Exception ex) {
-				LOGGER.error("Une Erreur de parsing des arguments est survenue", ex);
-			}
+            CommandLineParser parser = new DefaultParser();
+            Options options = new Options();
+            options.addOption(Option.builder("first")
+                    .argName("file")
+                    .hasArg()
+                    .desc("use given file for first job")
+                    .build());
 
-			if ((line != null) && (line.hasOption("first"))) {
-				String param = line.getOptionValue("first");
+            CommandLine line = null;
+            try {
+                line = parser.parse(options, args);
+            } catch (Exception ex) {
+                LOGGER.error("Une Erreur de parsing des arguments est survenue", ex);
+            }
 
-				File firstFile = new File(param);
-				if (firstFile.exists()) {
-					first(context, firstFile);
-					SpringApplication.exit(
-							context,
-							() -> 0);
-				} else {
-					LOGGER.error("File [{}] does not exists", firstFile);
-					HelpFormatter formatter = new HelpFormatter();
-					System.out.println();
-					System.out.println();
-					formatter.printHelp("sample-spring-boot-batch", options);
-				}
+            if ((line != null) && (line.hasOption("first"))) {
+                String param = line.getOptionValue("first");
 
-			} else {
-				HelpFormatter formatter = new HelpFormatter();
-				System.out.println();
-				System.out.println();
-				formatter.printHelp("sample-spring-boot-batch", options);
-			}
-		};
-	}
+                File firstFile = new File(param);
+                if (firstFile.exists()) {
+                    first(context, firstFile);
+                    SpringApplication.exit(
+                            context,
+                            () -> 0);
+                } else {
+                    LOGGER.error("File [{}] does not exists", firstFile);
+                    HelpFormatter formatter = new HelpFormatter();
+                    System.out.println();
+                    System.out.println();
+                    formatter.printHelp("sample-spring-boot-batch", options);
+                }
 
-	public void first(ApplicationContext context, File inputFile) {
+            } else {
+                HelpFormatter formatter = new HelpFormatter();
+                System.out.println();
+                System.out.println();
+                formatter.printHelp("sample-spring-boot-batch", options);
+            }
+        };
+    }
 
-		LOGGER.debug("First - Start ...");
+    public void first(ApplicationContext context, File inputFile) {
 
-		String inputFilePath = inputFile.getPath();
-		LOGGER.debug("First - Input Path = [{}].", inputFilePath);
+        LOGGER.debug("First - Start ...");
 
-		String filePath = null;
-		try {
-			filePath = inputFile.getPath();
-		} catch (Exception ex) {
-			LOGGER.error("An Exception has occurred", ex);
-		}
+        String inputFilePath = inputFile.getPath();
+        LOGGER.debug("First - Input Path = [{}].", inputFilePath);
 
-		LOGGER.info("filePath = [{}].", filePath);
+        String filePath = null;
+        try {
+            filePath = inputFile.getPath();
+        } catch (Exception ex) {
+            LOGGER.error("An Exception has occurred", ex);
+        }
 
-		JobLauncher jobLauncher = (JobLauncher) context.getBean(JobLauncher.class);
+        LOGGER.info("filePath = [{}].", filePath);
 
-		Job firstJob = null;
-		try {
-			firstJob = (Job) context.getBean(JobConstants.FIRST_JOB_ID);
-		} catch (BeansException ex) {
-			LOGGER.error("A BeansException has occurred", ex);
-		}
+        JobLauncher jobLauncher = (JobLauncher) context.getBean(JobLauncher.class);
 
-		if (firstJob != null) {
-			for (int i=0; i<2; i++) {
+        Job firstJob = null;
+        try {
+            firstJob = (Job) context.getBean(JobConstants.FIRST_JOB_ID);
+        } catch (BeansException ex) {
+            LOGGER.error("A BeansException has occurred", ex);
+        }
 
-				JobParametersBuilder jpBuilder = new JobParametersBuilder();
-				{
-					jpBuilder.addString("time", DF.format(new Date()));
-					jpBuilder.addString("filePath", filePath);
-				}
-				JobParameters jobParameters = jpBuilder.toJobParameters();
+        if (firstJob != null) {
 
-				try {
-					LOGGER.info("-- Run {} - Debut -----------------------------------------------", i+1);
-					jobLauncher.run(firstJob, jobParameters);
-					LOGGER.info("-- Run {} - Fin -------------------------------------------------", i+1);
-				} catch (JobExecutionAlreadyRunningException ex) {
-					LOGGER.error("A JobExecutionAlreadyRunningException has occurred", ex);
-				} catch (JobRestartException ex) {
-					LOGGER.error("A JobRestartException has occurred", ex);
-				} catch (JobInstanceAlreadyCompleteException ex) {
-					LOGGER.error("A JobInstanceAlreadyCompleteException has occurred", ex);
-				} catch (JobParametersInvalidException ex) {
-					LOGGER.error("A JobParametersInvalidException has occurred", ex);
-				} catch (Exception ex) {
-					LOGGER.error("An Exception has occurred", ex);
-				}
-			}
-		}
 
-		LOGGER.debug("First Init - End.");
-	}
+            JobParametersBuilder jpBuilder = new JobParametersBuilder();
+            {
+                jpBuilder.addString("time", DF.format(new Date()));
+                jpBuilder.addString("filePath", filePath);
+            }
+            JobParameters jobParameters = jpBuilder.toJobParameters();
+
+            try {
+                jobLauncher.run(firstJob, jobParameters);
+            } catch (JobExecutionAlreadyRunningException ex) {
+                LOGGER.error("A JobExecutionAlreadyRunningException has occurred", ex);
+            } catch (JobRestartException ex) {
+                LOGGER.error("A JobRestartException has occurred", ex);
+            } catch (JobInstanceAlreadyCompleteException ex) {
+                LOGGER.error("A JobInstanceAlreadyCompleteException has occurred", ex);
+            } catch (JobParametersInvalidException ex) {
+                LOGGER.error("A JobParametersInvalidException has occurred", ex);
+            } catch (Exception ex) {
+                LOGGER.error("An Exception has occurred", ex);
+            }
+
+        }
+
+        LOGGER.debug("First Init - End.");
+    }
 }

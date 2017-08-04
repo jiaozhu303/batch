@@ -21,6 +21,9 @@ import org.springframework.context.annotation.Configuration;
 
 import net.ldauvilaire.sample.batch.domain.dto.PersonDTO;
 import net.ldauvilaire.sample.batch.domain.model.Person;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 public class FirstJobConfiguration {
@@ -64,13 +67,16 @@ public class FirstJobConfiguration {
 	}
 
 	@Bean
-	public Step firstStep() throws Exception {
+	public Step firstStep( JpaTransactionManager transactionManager) throws Exception {
 		return stepBuilderFactory.get(JobConstants.FIRST_JOB_STEP_ID)
 				.repository(jobRepository)
 				.<PersonDTO, Person> chunk(chunckSize)
 				.reader(reader)
 				.processor(processor)
 				.writer(writer)
+                .taskExecutor(new SimpleAsyncTaskExecutor("LSC-"))
+                .throttleLimit(10)
+                .transactionManager(transactionManager)
 				.build();
 	}
 }
