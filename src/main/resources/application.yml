@@ -3,6 +3,7 @@ banner:
 liquibase:
   enabled:        true
   change-log:     classpath:/db/changelog/db.changelog-master.yaml
+
 spring:
   batch:
     initializer:
@@ -10,24 +11,43 @@ spring:
     job:
       enabled:    false
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url:               jdbc:postgresql://10.120.16.20:5432/postgres
-    username:          postgres
-    password:          postgres
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url:               jdbc:sqlserver://10.120.16.20;databaseName=init
+    username:          sa
+    password:          Passw0rd
+    max-idle:          20
+    min-idle:          5
+    max-active:        15
   jpa:
-    show-sql:          true
+    show-sql:          false
     generate-ddl:      false
     hibernate:
-      use-new-id-generator-mappings: SEQUENCE
+      ddl-auto:          create
+      use-new-id-generator-mappings: true
       naming:
-         implicit-strategy: jpa
+         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
     properties:
       hibernate:
         format_sql:    true
         jdbc:
-          batch_size:  10
+        batch_size:  10
+        dialect:  org.hibernate.dialect.SQLServer2012Dialect
         order_inserts: true
         order_updates: true
+
+  redis:
+    database: 10
+    host: 10.120.16.20
+    port: 6379
+    password: redis
+    pool:
+      max-active: 50
+      max-wait: -1
+      max-idle: 30
+      min-idle: 0
+    timeout: 5000
+
+
 batch:
   datasource:
     driver-class-name: org.postgresql.Driver

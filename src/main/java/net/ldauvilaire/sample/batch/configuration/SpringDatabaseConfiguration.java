@@ -8,13 +8,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
 @EnableTransactionManagement
-@EnableJpaRepositories("net.ldauvilaire.sample")
 public class SpringDatabaseConfiguration {
 
 	@Bean
@@ -25,7 +24,12 @@ public class SpringDatabaseConfiguration {
 	}
 
 	@Bean
-	public JpaTransactionManager transactionManager(EntityManagerFactory emf) {
+	public JpaTransactionManager jpaTransactionManager(EntityManagerFactory emf) {
 		return new JpaTransactionManager(emf);
 	}
+
+    @Bean
+    DataSourceTransactionManager transactionManager(DataSource dataSource) {
+        return new DataSourceTransactionManager(dataSource);
+    }
 }

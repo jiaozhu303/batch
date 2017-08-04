@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -91,6 +93,13 @@ public class Application {
                 System.out.println();
                 formatter.printHelp("sample-spring-boot-batch", options);
             }
+//            Resource resource = new ClassPathResource(FIRST_TEST_RESOURCE_PATH);
+//            String filePath = resource.getFile().getPath();
+//            Map param = new HashMap<String, String>();
+//            param.put("a", "sssss");
+//            Job firstJob = (Job) context.getBean(JobConstants.SECOND_JOB_ID);
+//            JobLauncher jobLauncher = context.getBean(JobLauncher.class);
+//            jobLauncher.run(firstJob, new JobParameters());
         };
     }
 
