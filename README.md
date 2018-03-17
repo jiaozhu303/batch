@@ -12,3 +12,5 @@
 ###Main program do use :
 - Postgresql database(s) running on localhost
 
+
+# this is addition - hotfix bugs
