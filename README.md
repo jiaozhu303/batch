@@ -13,10 +13,6 @@
 - Postgresql database(s) running on localhost
 
 
-<<<<<<< HEAD
-# this is addition - hotfix bugs
-=======
 # this is addition - hotfix bugs
 
 # commit 2
->>>>>>> v3
